@@ -3,10 +3,11 @@ import 'package:noter/pages/intro_page_1.dart';
 import 'package:noter/pages/intro_page_2.dart';
 import 'package:noter/pages/intro_page_3.dart';
 import 'package:noter/pages/notes_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({super.key});
+  const OnboardingPage({Key? key}) : super(key: key);
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
@@ -39,45 +40,87 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ],
           ),
 
+
+          const Spacer(),
+
           // smooth page indicator
-          Container(
-            alignment: const Alignment(0, 0.75),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Skip button
-                GestureDetector(
-                  onTap: () {
-                    _controller.jumpToPage(2); // jump to the last page
-                  },
-                  child: const Text("Skip")
-                ),
-
-                // Dot indicator
-                SmoothPageIndicator(controller: _controller, count: 3),
-
-                // Next or done (? :)
-                onLastPage 
-                  // IF WE ARE AT THE LAST PAGE, GO TO HOME PAGE :)
-                  ? GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, 
-                        MaterialPageRoute(builder: (context) {
-                          return NotesPage();
-                        }));
-                    },
-                    child: const Text("Done")
-                    // PRESS NEXT TO CONTINUE TO NEXT PAGE... 
-                  ) : GestureDetector(
-                    onTap: () {
-                      _controller.nextPage(
-                        duration: Duration(milliseconds: 500), 
-                        curve: Curves.easeIn
-                      );
-                    },
-                    child: const Text("Next")
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.2, // 20% of screen height
+              width: double.infinity, // Full width
+              alignment: const Alignment(0, 0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // MARK: DOT INDICATOR
+                  SmoothPageIndicator(
+                    controller: _controller,
+                    count: 3,
+                    effect: ExpandingDotsEffect(
+                      dotColor: Theme.of(context).colorScheme.secondary, // Inactive dot color
+                      activeDotColor: Theme.of(context).colorScheme.inversePrimary, // Active dot color
+                      dotHeight: 12.0,
+                      dotWidth: 12.0,
+                    ),
                   ),
-              ],
+            
+                  // Next or done (? :)
+                  onLastPage 
+                    // IF WE ARE AT THE LAST PAGE, GO TO HOME PAGE :)
+                    // MARK: DONE BUTTON
+                    ? GestureDetector(
+                      onTap: () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('isFirstLaunch', false);
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const NotesPage()),
+                          );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.inversePrimary, // Button color
+                          borderRadius: BorderRadius.circular(30.0), // Capsule shape
+                        ),
+                        child: Text(
+                          "Done",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.surface, // Text color
+                            fontWeight: FontWeight.w600,// Text color
+                            fontSize: 16.0,
+                          ),
+                        ),
+                        )
+                      )
+                      // PRESS NEXT TO CONTINUE TO NEXT PAGE... 
+                      // MARK: NEXT BUTTON
+                      : GestureDetector(
+                      onTap: () {
+                        _controller.nextPage(
+                          duration: const Duration(milliseconds: 500), 
+                          curve: Curves.easeIn
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.inversePrimary, // Button color
+                          borderRadius: BorderRadius.circular(30.0), // Capsule shape
+                        ),
+                        child: Text(
+                          "Next",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.surface, 
+                            fontWeight: FontWeight.w600,// Text color
+                            fontSize: 16.0,
+                          ),
+                        ),
+                      )
+                    ),
+                ],
+              ),
             ),
           ),
         ],
